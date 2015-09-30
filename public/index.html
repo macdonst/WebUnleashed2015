@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>The State of Speech Recognition on Mobile</title>
+
+		<meta name="description" content="Create Web Apps that react to speech recognition commands">
+		<meta name="author" content="Simon MacDonald">
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/simple.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Speech Bubbles -->
+		<link rel="stylesheet" href="css/bubble.css">
+
+		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+		<script>
+			document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+		</script>
+		
+    <script src="speakClient.js"></script>
+    <script src="speechshim.js"></script>
+		
+		<style type="text/css">
+.speechinput a {
+	cursor:pointer;
+	margin:auto;
+	margin:15px;
+	color:transparent;
+	background-color:transparent;
+	border:5px;
+	width:15px;
+	-webkit-transform: scale(4.0, 4.0);
+}
+		</style>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+      <header style="position: absolute;bottom: 50px; left: 30px; z-index:500; color: white; font-size:100px;background-color: rgba(255,255,255,0)"></header>
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>JavaScript Speech Recognition</h1>
+				</section>
+
+				<section>
+					<h2 style="font-family:Courier">Who is this guy?</h2>
+					<p><a class="box" data-state="bio-1" href="http://twitter.com/macdonst">@macdonst</a></p>
+					<p><a class="box" href="http://github.com/macdonst">macdonst on Github</a></p>
+					<p><a class="box" href="http://simonmacdonald.com">simonmacdonald.com</a></p>
+                    <p>works at <a class="box" href="http://www.adobe.com/">Adobe</a></p>
+                    <p><a class="box" href="http://cordova.apache.org/">Apache Cordova</a> core contributor</p>
+					<p>nutty about <a class="box" href="https://en.wikipedia.org/wiki/Speech_recognition">speech recognition</a></p>
+				</section>
+
+                <section>
+                  <blockquote>The future won't be like Star Trek.</blockquote>
+                  <h3>Scott Adams, creator of Dilbert</h3>
+                </section>
+
+                <section>
+                  <img src="images/communicator.png"/> <img class="fragment" src="images/cellphone.png"/>
+                </section>
+
+				<section>
+				    <section>
+				    <h3>Why do I care about speech rec?</h3>
+                  </section>
+                  <section data-background="capebreton.jpg" data-state="header1">
+                    <style>.header1 header:after { content: "Cape Breton Island"; }</style>
+                  </section>
+                  <section>
+                    <img src="scot.jpg"/> + <img class="fragment" src="pirate.png"/>
+                    <h1 class="fragment">= Cape Bretoner</h1>
+                  </section>
+                  <section>
+                            <h3>Here's a conversation between two Cape Bretoners</h3>
+                            <p class="fragment">P1: jeet?</p>
+                            <p class="fragment">P2: naw, jew?</p>
+                            <p class="fragment">P1: naw, t'rly t'eet bye.</p>
+                        </section>
+                          <section>
+                            <h3>And here's the translation</h3>
+                    <div class="fragment">
+                              <p>P1: jeet?</p>
+                              <p>P1: Did you eat?</p>
+                    </div>
+                    <div class="fragment">
+                            <p>P2: naw, jew?</p>
+                            <p>P2: No, did you?</p>
+                    </div>
+                    <div class="fragment">
+                            <p>P1: naw, t'rly t'eet bye.</p>
+                            <p>P1: No, it's too early to eat buddy.</p>
+                    </div>
+                        </section>
+                  <section>
+                    <h1>Regular Alphabet</h1>
+                    <h1>26 letters</h1>
+                    <div class="fragment">
+                      <h1>Cape Breton Alphabet</h1>
+                      <h1>12 letters!</h1>
+                    </div>
+                  </section>
+                  <section>
+                    <img align="left" src="images/narcissus.jpg"/>
+                    <h2>Alright, enough about me</h2>
+                  </section>
+				</section>
+				
+				<section>
+				    <section>
+    					<h1>What is speech recognition?</h1>
+    				</section>
+				    <section>
+    					<h2>Speech recognition is the process of translating the spoken word into text.</h2>
+    				</section>
+            <section>
+                <h2>The process of speech rec includes...</h2>
+            </section>
+            <section>
+                <h2>Record and digitize the audio data</h2>
+                <img src="images/waveform.png"/>
+            </section>
+            <section>
+                <h2>Perform end pointing (trimming)</h2>
+                <img src="images/endpoint.png"/>
+            </section>
+            <section>
+                <h2>Split data into phonemes</h2>
+                <img src="images/hello.png"/>
+            </section>
+            <section>
+                <h2>What is a phoneme?</h2>
+                <h2>It is a perceptually distinct units of sound in a specified language that distinguish one word from another.</h2>
+            </section>
+            <section>
+                <h2>The English language has 44 distinct sounds</h2>
+                <img src="images/english.png"/>
+                <p>Source: <a href="http://www.antimoon.com/resources/phonchart2008.pdf">English language phoneme chart</a></p>
+            </section>
+            <section>
+                <h2>By comparison, the Rotokas speakers in Papua New Guinea have 11 phonemes.</h2>
+                <h2 class="fragment">But the !Xóõ speakers who mostly live in Botswana have 112 phonemes.</h2>
+            </section>
+            <section>
+                <h2>Apply the phonemes to the recognition model. This is a massive lexicon which takes into account all of the different ways words can be pronounced.</h2>
+            </section>
+            <section>
+                <h2>Analyze the results against the grammar</h2>
+            </section>
+            <section>
+                <h2>Return a confidence weighted result</h2>
+            <pre><code contenteditable>[
+  {
+    "confidence": 0.97335243225098,
+    "transcript": "hello"
+  },
+  {
+    "confidence": 0.19940405040800,
+    "transcript": "hell low"
+  },
+  {
+    "confidence": 0.19910827091000,
+    "transcript": "how low"
+  }
+]</code></pre>
+
+            </section>
+				    <section>
+    					<h1>Basically...</h1>
+    				</section>
+    				<section data-background="images/meme4369281721.jpg">
+		    		</section>
+				</section>
+
+        <section>
+          <h2>We want it to be like this</h2>
+          <video src="tea.mp4" controls>
+        </section>
+
+        <section>
+          <h2>but more often than not...</h2>
+          <video src="HelloComputer.mp4" controls>
+        </section>
+
+        <section>
+          <section>
+            <h2>Why is that?</h2>
+            <h2 class="fragment">When two people talk comprehension rates are better than 97%</h2>
+          </section>
+          <section>
+            <h2>A really good english language speech recognition system is right 92% of the time</h2>
+          </section>
+          <section>
+            <h2>Where does that extra 5% in error rate come from?</h2>
+            <ul>
+              <li class="fragment">Vocabulary size and confusability</li>
+              <li class="fragment">Speaker dependence vs independence</li>
+              <li class="fragment">Isolated or continuous speech</li>
+              <li class="fragment">Initiated vs spontaneous speech</li>
+              <li class="fragment">Adverse conditions</li>
+            </ul>
+          </section>
+        </section>
+
+        <section>
+          <h2>Mobile Speech Recognition</h2>
+          <table cellpadding=0 cellspacing=0>
+            <tr>
+              <th style="border-bottom: 1px solid black">
+                OS
+              </th>
+              <th style="border-bottom: 1px solid black; border-left: 1px solid black">
+                &nbsp;Application
+              </th>
+              <th style="border-bottom: 1px solid black; border-left: 1px solid black">
+                &nbsp;SDK
+              </th>
+            </tr>
+            <tr>
+              <td>
+                Android
+              </td>
+              <td style="border-left: 1px solid black">
+                Google Now
+              </td>
+              <td style="border-left: 1px solid black">
+                Java API
+              </td>
+            </tr>
+            <tr>
+              <td>
+                iOS
+              </td>
+              <td style="border-left: 1px solid black">
+                Siri
+              </td>
+              <td style="border-left: 1px solid black">
+                Many 3rd party Obj-C SDK's
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Windows Phone
+              </td>
+              <td style="border-left: 1px solid black">
+                Cortana
+              </td>
+              <td style="border-left: 1px solid black">
+                C# API
+              </td>
+            </tr>
+          </table>
+        </section>
+
+			    <section>
+    				<h1>So how do we add speech rec to our app?</h1>
+    			</section>
+
+			    <section>
+    				<h2>You may look at the W3C Speech API Specification</h2>
+    				<img src="images/awesome-face.png"/>
+    			</section>
+
+			    <section>
+    				<h2>but only Chrome on the desktop has implemented that spec</h2>
+    				<img src="images/sad-face.jpg"/>
+    			</section>
+												
+			    <section>
+    				<h2>But that's okay!</h2>
+    				<img src="images/plugin.jpg"/>
+    			</section>
+												
+			    <section>
+			        <section>
+    				<h2>The spec looks like this:</h2>
+	    			<pre><code contenteditable>interface SpeechRecognition : EventTarget {
+    // recognition parameters
+    attribute SpeechGrammarList grammars;
+    attribute DOMString lang;
+    attribute boolean continuous;
+    attribute boolean interimResults;
+    attribute unsigned long maxAlternatives;
+    attribute DOMString serviceURI;
+
+    // methods to drive the speech interaction
+    void start();
+    void stop();
+    void abort();
+};</code></pre>
+                </section>
+                <section>
+    				<h2>With additional event methods to control behaviour:</h2>
+	    			<pre><code contenteditable>attribute EventHandler onaudiostart;
+attribute EventHandler onsoundstart;
+attribute EventHandler onspeechstart;
+attribute EventHandler onspeechend;
+attribute EventHandler onsoundend;
+attribute EventHandler onaudioend;
+attribute EventHandler onresult;
+attribute EventHandler onnomatch;
+attribute EventHandler onerror;
+attribute EventHandler onstart;
+attribute EventHandler onend;</code></pre>
+                </section>
+    			</section>
+
+				<section>
+   				    <h2>Let's recognize some speech</h2>
+	    			<pre><code contenteditable>
+var recognition = new SpeechRecognition();
+recognition.onresult = function(event) {
+  if (event.results.length > 0) {
+    var test1 = document.getElementById("test1");
+    test1.innerHTML = event.results[0][0].transcript;
+  }
+};
+recognition.start();
+		    		</code></pre>
+                    <input type="button" value="Click to Speak" onclick="test1()">
+                    <div id="test1">Replace me...</div>
+				</section>
+				
+				<section>
+				    <h1>So that's pretty cool...</h1>
+				</section>
+				
+				<section>
+				    <h2>...if taking dictation gets you going</h2>
+				    <img src="images/dictation.jpg"/>
+				</section>
+				
+				<section>
+				    <h1>But I want to do something more exciting with the result</h1>
+				</section>
+
+				<section>
+				    <h2>Let's do something a little less trivial</h2>
+					<pre><code contenteditable>recognition.onresult = function(event) {
+    var result = event.results[0][0].transcript;
+    var music = document.getElementById("music");
+    switch(result) {
+        case "jazz":
+            music.src="jazz.mp3";
+            music.play();
+            break;
+        case "rock":
+            music.src="rock.mp3";
+            music.play();
+            break;
+        case "stop":
+        default: 
+            music.pause();
+    }
+};
+					</code></pre>
+                    <input type="button" value="Click to Speak" onclick="test2()">
+				</section>
+
+				<section>
+					<h1>Which seems much cooler to me</h1>
+				</section>
+				
+				<section>
+				    <h2>Let's ask the web a question</h2>
+                    <input type="button" value="Click to Speak" onclick="test3()">
+                     <div id="answerweb">
+                        <p>
+                            <br/>
+                        </p>
+                     </div>
+				</section>
+
+				<section>
+					<h1>Works pretty good...</h1>
+					<h1 class="fragment">...but ugly!</h1>
+				</section>
+
+			    <section>
+				    <h1>Let's style our button with some CSS</h1>
+   				</section>
+   				
+			    <section>
+    				<pre><code contenteditable>&lt;a class="speechinput"&gt;
+    &lt;img src="images/mic.png"&gt;
+&lt;/a&gt;
+    				</code></pre>
+    					+
+    				<pre><code contenteditable>#speechinput input {
+	cursor:pointer;
+	margin:auto;
+	margin:15px;
+	color:transparent;
+	background-color:transparent;
+	border:5px;
+	width:15px;
+	-webkit-transform: scale(3.0, 3.0);
+}</code></pre>
+                    =
+				<a class="speechinput">
+                   <img src="images/mic.png" />
+                </a>
+    			</section>
+
+			    <section>
+				    <h2>And we'll add some color using</h2>
+				    <br/>
+				    <p class="triangle-isosceles">Speech</p>
+				    <br/>
+				    <p class="triangle-right top">Bubbles</p>
+				    <br/>
+				    <a href="http://nicolasgallagher.com/pure-css-speech-bubbles/">Pure-CSS-Speech-Bubbles</a>
+				    by Nicholas Gallagher
+   				</section>
+
+			    <section>
+				    <h1>Then pull it all together!</h1>
+   				</section>
+
+			    <section style="top: -200px;">
+				<a class="speechinput" onclick="test4()">
+                   <img src="images/mic.png" />
+                </a>
+                <div id="answerweb2"/>
+   				</section>
+
+                <section>
+                    <h1>But wait, why am I using my eyes like a sucker?</h1>
+                </section>
+
+                <section>
+                    <h2>We'll output the answer using SpeechSynthesis</h2>
+                    <!-- a href="https://github.com/kripken/speak.js">speak.js</a -->
+                </section>
+                
+			    <section>
+			        <section>
+    				<h2>The SpeechSynthesis spec looks like this:</h2>
+	    			<pre><code contenteditable>interface SpeechSynthesis {
+      readonly attribute boolean pending;
+      readonly attribute boolean speaking;
+      readonly attribute boolean paused;
+
+      void speak(SpeechSynthesisUtterance utterance);
+      void cancel();
+      void pause();
+      void resume();
+      SpeechSynthesisVoiceList getVoices();
+    };</code></pre>
+                </section>
+                <section>
+    				<h2>The SpeechSynthesisUtterance spec looks like this:</h2>
+	    			<pre><code contenteditable>interface SpeechSynthesisUtterance : EventTarget {
+      attribute DOMString text;
+      attribute DOMString lang;
+      attribute DOMString voiceURI;
+      attribute float volume;
+      attribute float rate;
+      attribute float pitch;
+    };</code></pre>
+                </section>
+                <section>
+    				<h2>With additional event methods to control behaviour:</h2>
+	    			<pre><code contenteditable>
+      attribute EventHandler onstart;
+      attribute EventHandler onend;
+      attribute EventHandler onerror;
+      attribute EventHandler onpause;
+      attribute EventHandler onresume;
+      attribute EventHandler onmark;
+      attribute EventHandler onboundary;
+</code></pre>
+                </section>
+    			</section>
+
+			    <section style="top: -200px;">
+				<a class="speechinput" onclick="test5()">
+                   <img src="images/mic.png" />
+                </a>
+                <div id="answerweb3"/>
+   				</section>
+
+        <section>
+            <h2>Plugin repo's</h2>
+            <ul>
+                <li>SpeechRecognitionPlugin - <a href="https://github.com/macdonst/SpeechSynthesisPlugin">https://github.com/macdonst/SpeechRecognitionPlugin</a></li>
+                <li>SpeechSynthesisPlugin - <a href="https://github.com/macdonst/SpeechSynthesisPlugin">https://github.com/macdonst/SpeechSynthesisPlugin</a></li>
+            </ul>
+        </section>
+
+        <section>
+          <h2>Availability</h2>
+          <table cellpadding=0 cellspacing=0>
+            <tr>
+              <th style="border-bottom: 1px solid black">
+                OS
+              </th>
+              <th style="border-bottom: 1px solid black; border-left: 1px solid black">
+                &nbsp;Recognition
+              </th>
+              <th style="border-bottom: 1px solid black; border-left: 1px solid black">
+                &nbsp;Synthesis
+              </th>
+            </tr>
+            <tr>
+              <td>
+                Android
+              </td>
+              <td style="border-left: 1px solid black">
+                &nbsp;&#10003;
+              </td>
+              <td style="border-left: 1px solid black">
+                &nbsp;&#10003;
+              </td>
+            </tr>
+            <tr>
+              <td>
+                iOS*
+              </td>
+              <td style="border-left: 1px solid black">
+                &nbsp;Soonish
+              </td>
+              <td style="border-left: 1px solid black">
+                &nbsp;Native to iOS 7.0+
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Windows Phone
+              </td>
+              <td style="border-left: 1px solid black">
+                &nbsp;&times;
+              </td>
+              <td style="border-left: 1px solid black">
+                &nbsp;&times;
+              </td>
+            </tr>
+          </table>
+          * Working with Julio César (@jcesarmobile) to get iOS done
+        </section>
+
+        <section>
+          <section>
+            <h2>Getting started</h2>
+            <pre>
+              <code contenteditable>
+phonegap create speech com.example.speech speech      
+cd speech
+phonegap platform add android
+phonegap plugin add https://github.com/macdonst/SpeechRecognitionPlugin
+phonegap plugin add https://github.com/macdonst/SpeechSynthesisPlugin
+phonegap run android
+              </code>
+            </pre>
+          </section>
+          <section>
+            <h2>For more information on hybrid applications</h2>
+            <h2>Check out Nick Van Weerdenburg and Andrey Feldman presentation on <i>Creating a Comprehensive Social Media App Using Ionic and Phone Gap</i> 3:45pm today in 801A.</h2>
+          </section>
+        </section>
+
+        <section>
+          <h1>But wait, one more thing...</h1>
+        </section>
+
+        <section>
+          <h2>Speech recognition and speech synthesis are not well supported in the emulator</h2>
+          <h2 class="fragment">and sometimes developing on the device can be a bit of a pain.</h2>
+        </section>
+
+        <section>
+          <h2>That's why I coded speechshim.js</h2>
+            <a href="https://github.com/macdonst/SpeechShim">https://github.com/macdonst/SpeechShim</a>
+        </section>
+
+        <section>
+          <h2>Chrome + speechshim.js<br/>
+            = <br/>
+            W3C Web Speech API on your desktop
+          </h2>
+        </section>
+
+        <section>
+          <h2>Types of Speech Recognition Applications</h2>
+          <ul>
+            <li>Voice Web Search</li>
+            <li>Speech Command Interface</li>
+            <li>Continuous Recognition of Open Dialog</li>
+            <li>Domain Specific Grammars Filling Multiple Input Fields</li>
+            <li>Speech UI present when no visible UI need be present</li>
+            <li>Voice Activity Detection</li>
+            <li>Speech Translation</li>
+            <li>Multimodal Interaction</li>
+            <li>Speech Driving Directions</li>
+          </ul>
+        </section>
+
+        <section style="top: -200px;">
+          <a class="speechinput" onclick="test6()">
+            <img src="images/mic.png" />
+          </a>
+          <div id="answerweb4"/>
+        </section>
+
+        <section>
+          <h1>THE END</h1>
+        </section>
+			</div>
+
+		</div>
+        <audio id="music" style="display: none"/>
+        
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/none
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/showdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+					// { src: 'plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+            Reveal.addEventListener( 'slidechanged', function( event ) {
+                // event.previousSlide, event.currentSlide, event.indexh, event.indexv
+                console.log("prev = " + event.indexh);
+                if (event.indexh - 1 == 18) {
+                    var music = document.getElementById("music");
+                    music.pause();
+                }
+            } );
+
+            var parseXml = function(xmlStr) {
+              return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
+            };
+            
+            function test1() {
+                console.log("test1");
+              var recognition = new SpeechRecognition();
+              recognition.onresult = function(event) {
+                if (event.results.length > 0) {
+                  console.log(JSON.stringify(event.results));
+                    var test1 = document.getElementById("test1");
+                    test1.innerHTML = event.results[0][0].transcript;
+                  }
+                };
+                console.log("calling start");
+              recognition.start();
+            }
+            
+            function test2() {
+                console.log("test2");
+              var recognition = new SpeechRecognition();
+              recognition.onresult = function(event) {
+                console.log("got result");
+                if (event.results.length > 0) {
+                console.log(event.results[0][0].transcript);
+    var result = event.results[0][0].transcript;
+    var music = document.getElementById("music");
+    switch(result) {
+        case "jazz":
+            music.src="jazz.mp3";
+            music.play();
+            break;
+        case "rock":
+            music.src="rock.mp3";
+            music.play();
+            break;
+        case "stop":
+        default: 
+            music.pause();
+    }
+                  }
+                };
+                recognition.onnomatch = function() {
+                    console.log("no match");
+                };
+                recognition.onerror = function() {
+                    console.log("error");
+                };
+                
+                console.log("calling start");
+              recognition.start();
+            }
+            
+            function stopMusic() {
+                var music = document.getElementById("music");
+                music.pause();
+            }
+            
+            function test3() {
+                console.log("test3");
+              var recognition = new SpeechRecognition();
+              recognition.onresult = function(event) {
+                if (event.results.length > 0) {
+    var searchTerm = event.results[0][0].transcript;
+    var qDiv = document.getElementById("answerweb");
+    qDiv.innerHTML = qDiv.innerHTML + '<p>Q: ' + searchTerm + '</p>';
+    /*
+    setTimeout(function() {
+        qDiv.innerHTML = qDiv.innerHTML + '<p>A: Friday July 19th, 2013</p>';
+    }, 1000);
+    */
+    
+    var request = new XMLHttpRequest();
+    request.open("POST", "https://hidden-reef-6076.herokuapp.com/wolfram");
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.onreadystatechange = function() {
+        if(request.readyState == 4) {
+            console.log("*"+request.responseText+"*");
+            var theXML = parseXml(request.responseText);
+            var querySuccess = theXML.getElementsByTagName("queryresult")[0].getAttributeNode("success").nodeValue;
+            if (querySuccess == "true") {
+                var results = theXML.getElementsByTagName("pod");
+                for (i=0; i<results.length; i++) {
+                    if (results[i].getAttributeNode("primary") != null && results[i].getAttributeNode("primary").nodeValue == "true") {
+                        var res = results[i].getElementsByTagName("subpod")[0].getElementsByTagName("plaintext")[0].childNodes[0].nodeValue;
+                        res = res.replace(/\|/g, "");
+                        qDiv.innerHTML = qDiv.innerHTML + '<p>A: ' + res + '</p>';
+                        console.log(res);
+                        break;
+                    }
+                }
+            } else {
+                //displayQA("I'm sorry I didn't understand", 'triangle-right top');
+                console.log("I'm sorry I didn't understand");
+            }
+        }
+    }
+    console.log("asking wolfram alpha");
+    var data = {};
+    data.searchTerm = searchTerm;
+    request.send(JSON.stringify(data));
+                  }
+                };
+                console.log("calling start");
+              recognition.start();
+            }
+            
+            function test4() {
+                console.log("test4");
+              var recognition = new SpeechRecognition();
+              recognition.onresult = function(event) {
+                if (event.results.length > 0) {
+    var searchTerm = event.results[0][0].transcript;
+    var qDiv = document.getElementById("answerweb2");
+    qDiv.innerHTML = qDiv.innerHTML + '<br/><p class="triangle-isosceles">' + searchTerm + '</p>';
+    /*
+    setTimeout(function() {
+        qDiv.innerHTML = qDiv.innerHTML + '<br/><p class="triangle-right top">Steven Paul Jobs</p>';
+    }, 1000);
+    */
+
+    var request = new XMLHttpRequest();
+    request.open("POST", "https://hidden-reef-6076.herokuapp.com/wolfram");
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.onreadystatechange = function() {
+        if(request.readyState == 4) {
+            console.log("*"+request.responseText+"*");
+            var theXML = parseXml(request.responseText);
+            var querySuccess = theXML.getElementsByTagName("queryresult")[0].getAttributeNode("success").nodeValue;
+            if (querySuccess == "true") {
+                var results = theXML.getElementsByTagName("pod");
+                for (i=0; i<results.length; i++) {
+                    if (results[i].getAttributeNode("primary") != null && results[i].getAttributeNode("primary").nodeValue == "true") {
+                        var res = results[i].getElementsByTagName("subpod")[0].getElementsByTagName("plaintext")[0].childNodes[0].nodeValue;
+                        res = res.replace(/\|/g, "");
+                        qDiv.innerHTML = qDiv.innerHTML + '<br/><p class="triangle-right top">' + res + '</p>';
+                        console.log(res);
+                        break;
+                    }
+                }
+            } else {
+                //displayQA("I'm sorry I didn't understand", 'triangle-right top');
+                console.log("I'm sorry I didn't understand");
+            }
+        }
+    }
+    console.log("asking wolfram alpha");
+    var data = {};
+    data.searchTerm = searchTerm;
+    request.send(JSON.stringify(data));
+                  }
+                };
+                console.log("calling start");
+              recognition.start();
+            }
+            
+            function test5() {
+                console.log("test5");
+              var recognition = new SpeechRecognition();
+              recognition.onresult = function(event) {
+                if (event.results.length > 0) {
+    var searchTerm = event.results[0][0].transcript;
+    var qDiv = document.getElementById("answerweb3");
+    qDiv.innerHTML = qDiv.innerHTML + '<br/><p class="triangle-isosceles">' + searchTerm + '</p>';
+    /*
+    setTimeout(function() {
+        var res = "Chicago Blackhawks";
+        qDiv.innerHTML = qDiv.innerHTML + '<br/><p class="triangle-right top">' + res + '</p>';
+        console.log("calling speak");
+        speak(res);
+        console.log(res);
+    }, 1000);
+*/
+
+    var request = new XMLHttpRequest();
+    request.open("POST", "https://hidden-reef-6076.herokuapp.com/wolfram");
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.onreadystatechange = function() {
+        if(request.readyState == 4) {
+            console.log("*"+request.responseText+"*");
+            var theXML = parseXml(request.responseText);
+            var querySuccess = theXML.getElementsByTagName("queryresult")[0].getAttributeNode("success").nodeValue;
+            if (querySuccess == "true") {
+                var results = theXML.getElementsByTagName("pod");
+                for (i=0; i<results.length; i++) {
+                    if (results[i].getAttributeNode("primary") != null && results[i].getAttributeNode("primary").nodeValue == "true") {
+                        var res = results[i].getElementsByTagName("subpod")[0].getElementsByTagName("plaintext")[0].childNodes[0].nodeValue;
+                        res = res.replace(/\|/g, "");
+                        qDiv.innerHTML = qDiv.innerHTML + '<br/><p class="triangle-right top">' + res + '</p>';
+                        console.log("calling speak");
+                        var u = new SpeechSynthesisUtterance();
+                        u.text = res;
+                        u.lang = 'en-US';
+                        u.rate = 1.2;
+                        u.onend = function(event) { console.log('Finished'); }
+                        u.onerror = function(event) { console.log('error ' + event); }
+                        speechSynthesis.speak(u);
+                        //speak(res);
+                        console.log(res);
+                        break;
+                    }
+                }
+            } else {
+                //displayQA("I'm sorry I didn't understand", 'triangle-right top');
+                console.log("I'm sorry I didn't understand");
+            }
+        }
+    }
+    console.log("asking wolfram alpha");
+    var data = {};
+    data.searchTerm = searchTerm;
+    request.send(JSON.stringify(data));
+                  }
+                };
+                recognition.onnomatch = function() {
+                    console.log("no match");
+                };
+                recognition.onerror = function() {
+                    console.log("error");
+                };
+
+                console.log("calling start");
+              recognition.start();
+            }
+            
+            function test6() {
+                console.log("test6");
+              var recognition = new SpeechRecognition();
+              recognition.onresult = function(event) {
+                if (event.results.length > 0) {
+    var searchTerm = event.results[0][0].transcript;
+    var qDiv = document.getElementById("answerweb4");
+    qDiv.innerHTML = qDiv.innerHTML + '<br/><p class="triangle-isosceles">' + searchTerm + '</p>';
+
+    var request = new XMLHttpRequest();
+    request.open("POST", "https://hidden-reef-6076.herokuapp.com/translate");
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.onreadystatechange = function() {
+        if(request.readyState == 4) {
+            console.log("*"+request.responseText+"*");
+            var translation = JSON.parse(request.responseText);
+            var res = translation.data.translations[0].translatedText;
+            qDiv.innerHTML = qDiv.innerHTML + '<br/><p class="triangle-right top">' + res + '</p>';
+
+            console.log("calling speak");
+            var u = new SpeechSynthesisUtterance();
+            u.text = res;
+            u.lang = 'es';
+            u.rate = 1.1;
+            u.onend = function(event) { console.log('Finished'); }
+            speechSynthesis.speak(u);
+        }
+    }
+    console.log("asking wolfram alpha");
+    var data = {};
+    data.searchTerm = searchTerm;
+    request.send(JSON.stringify(data));
+                  }
+                };
+                recognition.onnomatch = function() {
+                    console.log("no match");
+                };
+                recognition.onerror = function() {
+                    console.log("error");
+                };
+
+                console.log("calling start");
+              recognition.start();
+            }
+		</script>
+        <!-- script type="text/javascript" src="phonegap.js"></script -->
+        <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript">
+            app.initialize();
+        </script>
+        <div id="audio"></div>
+	</body>
+</html>
